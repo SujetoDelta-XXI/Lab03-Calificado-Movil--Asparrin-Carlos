@@ -1,15 +1,16 @@
 package com.asparrin.carlos.laboratoriocalificado03.ui.view
 
 import android.content.Context
+import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.asparrin.carlos.laboratoriocalificado03.R
 import com.asparrin.carlos.laboratoriocalificado03.databinding.ActivityMainBinding
 import com.asparrin.carlos.laboratoriocalificado03.data.model.TeachersResponse
@@ -33,11 +34,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupRecycler() = with(binding.rvTeachers) {
-        // GridLayout con 2 columnas
         layoutManager = GridLayoutManager(this@MainActivity, 2)
-        // Adapter inicial con lista vacía
-        adapter = TeacherAdapter(emptyList()).also { this@MainActivity.adapter = it }
-        // Decoración para separar tarjetas
+        adapter = TeacherAdapter(
+            emptyList(),
+            onClick = { teacher -> dialPhone(teacher.phoneNumber) },
+            onLongClick = { teacher -> sendEmail(teacher.email) }
+        ).also { this@MainActivity.adapter = it }
         val spacing = resources.getDimensionPixelSize(R.dimen.card_spacing)
         addItemDecoration(GridSpacingItemDecoration(2, spacing, true))
     }
@@ -80,4 +82,28 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun dialPhone(number: String) {
+        val intent = Intent(Intent.ACTION_DIAL).apply {
+            data = Uri.parse("tel:$number")
+        }
+        startActivity(intent)
+    }
+
+    private fun sendEmail(email: String) {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "message/rfc822"
+            putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
+            putExtra(Intent.EXTRA_SUBJECT, "Consulta desde la app")
+        }
+        // Usa un chooser para que el usuario elija su cliente de correo
+        val chooser = Intent.createChooser(intent, "Enviar email con...")
+        // Y sólo mostramos el Toast si no hay nada que pueda manejar el intent
+        if (intent.resolveActivity(packageManager) != null) {
+            startActivity(chooser)
+        } else {
+            Toast.makeText(this, "No hay app de correo instalada", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 }

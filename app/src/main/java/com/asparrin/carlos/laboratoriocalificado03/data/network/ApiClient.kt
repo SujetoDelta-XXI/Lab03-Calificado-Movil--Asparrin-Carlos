@@ -13,7 +13,6 @@ object ApiClient {
         .addInterceptor(logging)
         .build()
 
-    // Retrofit exige un baseUrl, pero no lo usarás directamente
     private val retrofit = Retrofit.Builder()
         .baseUrl("https://private-effe28-tecsup1.apiary-mock.com/")
         .client(client)
